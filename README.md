@@ -48,7 +48,7 @@ npm install -g gulp
  File/Folder    | Use for
 --------------- | --------------------------------------
 *style.sass*    | Including all sass files
-*vendor/*       | Is for CSS related to some JavaScript libraries
+*vendors/*       | Is for CSS related to some JavaScript libraries
 *fonts/*        | Is for fonts *(include font awesome)*
 *animations/*   | Is for keyframes animations
 *modules/*      | Is for mixins, variables and utilities
