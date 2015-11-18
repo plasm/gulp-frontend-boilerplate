@@ -1,3 +1,5 @@
+![Screenshot](https://raw.githubusercontent.com/plasm/gulp-frontend-boilerplate/master/src/icons/apple-touch-icon.png)
+
 # Gulp Frontend Boilerplate
 Boilerplate for Frontend.
 
