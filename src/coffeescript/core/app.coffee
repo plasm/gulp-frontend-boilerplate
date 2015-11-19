@@ -13,7 +13,10 @@ class App
   ###
 
   main: ->
-    $("body").addClass("loaded")
+    callback = ->
+      $("body").addClass("loaded")
+
+    setTimeout callback, 1000
 
   # Initialize
   _initialize: ->
