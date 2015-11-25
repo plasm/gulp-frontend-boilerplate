@@ -1,0 +1,33 @@
+=clearfix
+  &:before,
+  &:after
+    content: " "
+    // 1
+    display: table
+    // 2
+  &:after
+    clear: both
+
+// Box sizing
+=box-sizing($boxmodel)
+  -webkit-box-sizing: $boxmodel
+  -moz-box-sizing: $boxmodel
+  box-sizing: $boxmodel
+
+// Center-align a block level element
+
+=center-block
+  display: block
+  margin-left: auto
+  margin-right: auto
+
+=hide-text
+  font: 0/0 a
+  color: transparent
+  text-shadow: none
+  background-color: transparent
+  border: 0
+
+// New mixin to use as of v3.0.1
+=text-hide
+  +hide-text

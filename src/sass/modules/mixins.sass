@@ -1,9 +1,3 @@
-// Box sizing
-=box-sizing($boxmodel)
-  -webkit-box-sizing: $boxmodel
-  -moz-box-sizing: $boxmodel
-  box-sizing: $boxmodel
-
 // Disable selection elements
 =disableSelection()
   -webkit-touch-callout: none
@@ -96,13 +90,6 @@
   background-image: -o-linear-gradient($angle, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent)
   background-image: linear-gradient($angle, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent)
 
-
-// Center-align a block level element
-=center-block()
-  display: block
-  margin-left: auto
-  margin-right: auto
-
 // Sizing shortcuts
 // -------------------------
 =size($height: 5px, $width: 5px)
@@ -112,13 +99,6 @@
 =square($size: 5px)
   +size($size, $size)
 
-// New image replacement
-// -------------------------
-// Source: http://www.zeldman.com/2012/03/01/replacing-the-9999px-hack-new-image-replacement/
-=hide-text
-  overflow: hidden
-  text-indent: 100%
-  white-space: nowrap
 
 // Transformations
 =perspective($value)
