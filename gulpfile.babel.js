@@ -72,6 +72,7 @@ gulp.task('server', function () {
   return browserSync.init({
     server: {baseDir: config.out_development},
     ui: false,
+    notify: false
   })
 })
 
