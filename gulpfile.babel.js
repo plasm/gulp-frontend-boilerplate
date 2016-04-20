@@ -14,12 +14,14 @@ import plumber from 'gulp-plumber'
 import notify from 'gulp-notify'
 import uglify from 'gulp-uglify'
 import minifyCss from 'gulp-minify-css'
+import pug from 'gulp-pug'
 
 let browserSync = browserSyncModule.create()
 
 const config = {
   inFiles: {
     html: 'src/*.html',
+    pug: 'src/*.pug',
     js:   ['src/coffeescript/application.coffee'],
     css:  'src/sass/style.{sass,scss,css}'
   },
@@ -129,9 +131,19 @@ gulp.task('html', function () {
 })
 
 // -------------------------------------------------------
-gulp.task('watch', ['symlink', 'js', 'sass', 'html',  'server'], function () {
+// Development: Compile Pug files
+gulp.task('pug', function () {
+  return gulp.src(config.inFiles.pug)
+    .pipe(pug())
+    .pipe(gulp.dest(config.out_development)) // Just copy.
+    .pipe(browserSync.stream())
+})
+
+// -------------------------------------------------------
+gulp.task('watch', ['symlink', 'js', 'sass', 'pug', 'html', 'server'], function () {
   // FIXME: initial development is done two times
   getBundler().on('update', () => gulp.start('js'))
+  gulp.watch('**/*.pug', ['pug'])
   gulp.watch('**/*.coffee', ['js'])
   gulp.watch('**/*.{sass,scss,css}', ['sass'])
   gulp.watch(config.inFiles.html, ['html'])
@@ -163,7 +175,7 @@ gulp.task('minify-css', function() {
 
 // -------------------------------------------------------
 // Production: Copy HTML files
-gulp.task('copy:html', function () {
+gulp.task('copy:html', ['pug'], function () {
   return gulp.src(['src/*.html'])
   .pipe(gulp.dest(config.out_production))
   .pipe(notify({ message: 'Copy HTML task complete' }))
