@@ -16,7 +16,7 @@ import uglify from 'gulp-uglify'
 import minifyCss from 'gulp-minify-css'
 import pug from 'gulp-pug'
 import rename from 'gulp-rename'
-import gulpBrowserify from 'gulp-browserify'
+import buffer from 'vinyl-buffer'
 
 let browserSync = browserSyncModule.create()
 
@@ -174,28 +174,33 @@ gulp.task('watch', ['symlink', 'js', 'sass', 'pug', 'html', 'server'], function 
 // -------------------------------------------------------
 // Production: Compile JS
 gulp.task('compile-js', function () {
-  return gulp.src('src/**/*.coffee', { read: false })
-    .pipe(gulpBrowserify({
-      transform: ['coffeeify'],
-      extensions: ['.coffee']
-    }))
-    .pipe(rename(config.outFiles.js))
+  browserify({
+      entries: ['src/coffeescript/application.coffee'],
+      debug: true,
+      extensions: [".coffee"],
+      transform: ["coffeeify"]
+    })
+    .bundle()
+    .pipe(source(config.outFiles.js))
     .pipe(gulp.dest(out_directory))
     .pipe(notify({ message: 'Compile JS task complete' }))
-})
+});
 
 // -------------------------------------------------------
 // Production: Copy And Compress JS
 gulp.task('uglify-js', function() {
-  return gulp.src('src/**/*.coffee', { read: false })
-    .pipe(gulpBrowserify({
-      transform: ['coffeeify'],
-      extensions: ['.coffee']
-    }))
+  browserify({
+      entries: ['src/coffeescript/application.coffee'],
+      debug: true,
+      extensions: [".coffee"],
+      transform: ["coffeeify"]
+    })
+    .bundle()
+    .pipe(source(config.outFiles.js))
+    .pipe(buffer())
     .pipe(uglify())
-    .pipe(rename(config.outFiles.js))
     .pipe(gulp.dest(out_directory))
-    .pipe(notify({ message: 'Minify JS task complete' }))
+    .pipe(notify({ message: 'Compile JS task complete' }))
 });
 
 // -------------------------------------------------------
