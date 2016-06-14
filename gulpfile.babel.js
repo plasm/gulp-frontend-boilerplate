@@ -15,6 +15,8 @@ import notify from 'gulp-notify'
 import uglify from 'gulp-uglify'
 import minifyCss from 'gulp-minify-css'
 import pug from 'gulp-pug'
+import rename from 'gulp-rename'
+import gulpBrowserify from 'gulp-browserify'
 
 let browserSync = browserSyncModule.create()
 
@@ -29,8 +31,11 @@ const config = {
   out_production: 'production/',
   outFiles: {
     js:   'app.js',
+    css:  'style.css',
   },
 }
+
+let out_directory = config.out_development
 
 gutil.log('- - - - - - - - - - - - - - -')
 gutil.log('          Starting!          ')
@@ -57,6 +62,18 @@ function getBundler() {
 }
 
 // -------------------------------------------------------
+// Set development directory
+gulp.task('set-development', function () {
+  out_directory = config.out_development
+})
+
+// -------------------------------------------------------
+// Set production directory
+gulp.task('set-production', function () {
+  out_directory = config.out_production
+})
+
+// -------------------------------------------------------
 //
 // DEVELOPMENT TASK
 //
@@ -65,14 +82,14 @@ function getBundler() {
 // -------------------------------------------------------
 // Utility: A `rm -rf` util for nodejs
 gulp.task('clean', function (cb) {
-  return rimraf(config.out_development, cb)
+  return rimraf(out_directory, cb)
 })
 
 // -------------------------------------------------------
 // Development: Open server
 gulp.task('server', function () {
   return browserSync.init({
-    server: {baseDir: config.out_development},
+    server: {baseDir: out_directory},
     ui: false,
     notify: false
   })
@@ -83,16 +100,15 @@ gulp.task('server', function () {
 gulp.task('symlink', function () {
   return gulp.src(['src/images/', 'src/fonts/', 'src/icons/'])
   .pipe( symlink( [
-      config.out_development + 'images',
-      config.out_development + 'fonts',
-      config.out_development + 'icons'
+      out_directory + 'images',
+      out_directory + 'fonts',
+      out_directory + 'icons'
     ], {force: true} )
   )
 })
 
-
 // -------------------------------------------------------
-// Development: Compile Js
+// Development: Compile Js and stream to browser
 gulp.task('js', function () {
     return getBundler().bundle()
     .pipe(plumber({errorHandler: (err) => {
@@ -101,13 +117,13 @@ gulp.task('js', function () {
       }
     }))
     .pipe(source(config.outFiles.js))
-    .pipe(gulp.dest(config.out_development))
+    .pipe(gulp.dest(out_directory))
     .pipe(notify({ message: 'Js compiled' }))
     .pipe(browserSync.stream())
 })
 
 // -------------------------------------------------------
-// Development: Compile Sass
+// Development: Compile Sass and stream to browser
 gulp.task('sass', function () {
   return gulp.src(config.inFiles.css)
     .pipe(plumber({errorHandler: (err) => {
@@ -117,7 +133,7 @@ gulp.task('sass', function () {
     }))
     .pipe(sass({includePaths: 'node_modules/'}))
     .pipe(autoprefixer({ browsers: ['> 5% in IT', 'ie >= 8'] }))
-    .pipe(gulp.dest(config.out_development))
+    .pipe(gulp.dest(out_directory))
     .pipe(notify({ message: 'Sass compiled' }))
     .pipe(browserSync.stream())
 })
@@ -126,7 +142,7 @@ gulp.task('sass', function () {
 // Development: Copy HTML files
 gulp.task('html', function () {
   return gulp.src(config.inFiles.html)
-    .pipe(gulp.dest(config.out_development)) // Just copy.
+    .pipe(gulp.dest(out_directory)) // Just copy.
     .pipe(browserSync.stream())
 })
 
@@ -135,13 +151,13 @@ gulp.task('html', function () {
 gulp.task('pug', function () {
   return gulp.src(config.inFiles.pug)
     .pipe(pug())
-    .pipe(gulp.dest(config.out_development)) // Just copy.
+    .pipe(gulp.dest(out_directory)) // Just copy.
     .pipe(browserSync.stream())
 })
 
 // -------------------------------------------------------
 gulp.task('watch', ['symlink', 'js', 'sass', 'pug', 'html', 'server'], function () {
-  // FIXME: initial development is done two times
+  // FIXME: initial development is done twice
   getBundler().on('update', () => gulp.start('js'))
   gulp.watch('**/*.pug', ['pug'])
   gulp.watch('**/*.coffee', ['js'])
@@ -156,20 +172,51 @@ gulp.task('watch', ['symlink', 'js', 'sass', 'pug', 'html', 'server'], function 
 // -------------------------------------------------------
 
 // -------------------------------------------------------
+// Production: Compile JS
+gulp.task('compile-js', function () {
+  return gulp.src('src/**/*.coffee', { read: false })
+    .pipe(gulpBrowserify({
+      transform: ['coffeeify'],
+      extensions: ['.coffee']
+    }))
+    .pipe(rename(config.outFiles.js))
+    .pipe(gulp.dest(out_directory))
+    .pipe(notify({ message: 'Compile JS task complete' }))
+})
+
+// -------------------------------------------------------
 // Production: Copy And Compress JS
 gulp.task('uglify-js', function() {
-  return gulp.src(config.out_development + '*.js')
+  return gulp.src('src/**/*.coffee', { read: false })
+    .pipe(gulpBrowserify({
+      transform: ['coffeeify'],
+      extensions: ['.coffee']
+    }))
     .pipe(uglify())
-    .pipe(gulp.dest(config.out_production))
+    .pipe(rename(config.outFiles.js))
+    .pipe(gulp.dest(out_directory))
     .pipe(notify({ message: 'Minify JS task complete' }))
 });
 
 // -------------------------------------------------------
+// Production: Compile SASS
+gulp.task('compile-sass', function () {
+  return gulp.src(config.inFiles.css)
+    .pipe(sass({includePaths: 'node_modules/'}))
+    .pipe(autoprefixer({ browsers: ['> 5% in IT', 'ie >= 8'] }))
+    .pipe(gulp.dest(out_directory))
+    .pipe(notify({ message: 'SASS compiled' }))
+})
+
+// -------------------------------------------------------
 // Production: Copy And Compress CSS
 gulp.task('minify-css', function() {
-  return gulp.src(config.out_development + '*.css')
+  return gulp.src(config.inFiles.css)
+    .pipe(sass({includePaths: 'node_modules/'}))
+    .pipe(autoprefixer({ browsers: ['> 5% in IT', 'ie >= 8'] }))
     .pipe(minifyCss({keepSpecialComments: 0}))
-    .pipe(gulp.dest(config.out_production))
+    .pipe(rename(config.outFiles.css))
+    .pipe(gulp.dest(out_directory))
     .pipe(notify({ message: 'Minify CSS task complete' }))
 });
 
@@ -177,7 +224,7 @@ gulp.task('minify-css', function() {
 // Production: Copy HTML files
 gulp.task('copy:html', ['pug'], function () {
   return gulp.src(['src/*.html'])
-  .pipe(gulp.dest(config.out_production))
+  .pipe(gulp.dest(out_directory))
   .pipe(notify({ message: 'Copy HTML task complete' }))
 });
 
@@ -185,7 +232,7 @@ gulp.task('copy:html', ['pug'], function () {
 // Production: Copy Images files
 gulp.task('copy:images', function () {
   return gulp.src(['src/images/**/*'])
-  .pipe(gulp.dest(config.out_production + 'images'))
+  .pipe(gulp.dest(out_directory + 'images'))
   .pipe(notify({ message: 'Copy images task complete' }))
 });
 
@@ -193,7 +240,7 @@ gulp.task('copy:images', function () {
 // Production: Copy Fonts files
 gulp.task('copy:fonts', function () {
   return gulp.src(['src/fonts/**/*'])
-  .pipe(gulp.dest(config.out_production + 'fonts'))
+  .pipe(gulp.dest(out_directory + 'fonts'))
   .pipe(notify({ message: 'Copy fonts task complete' }))
 });
 
@@ -201,8 +248,15 @@ gulp.task('copy:fonts', function () {
 // Production: Copy Icons files
 gulp.task('copy:icons', function () {
   return gulp.src(['src/icons/**/*'])
-  .pipe(gulp.dest(config.out_production + 'icons'))
+  .pipe(gulp.dest(out_directory + 'icons'))
   .pipe(notify({ message: 'Copy icons task complete' }))
 });
 // -------------------------------------------------------
-gulp.task('production', ['copy:html', 'copy:images', 'copy:fonts', 'copy:icons', 'minify-css', 'uglify-js'], function () {})
+
+gulp.task('build:unminified', ['copy:html', 'copy:images', 'copy:fonts', 'copy:icons', 'compile-sass', 'compile-js'], function () {})
+gulp.task('build:minified', ['copy:html', 'copy:images', 'copy:fonts', 'copy:icons', 'minify-css', 'uglify-js'], function () {})
+
+gulp.task('production', ['set-production', 'build:minified'], function () {})
+gulp.task('production:minified', ['set-production', 'build:minified'], function () {})
+gulp.task('production:unminified', ['set-production', 'build:unminified'], function () {})
+
