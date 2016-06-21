@@ -158,7 +158,7 @@ gulp.task('pug', function () {
 })
 
 // -------------------------------------------------------
-// Development: Compile Pug files
+// Development: Compile Haml files
 gulp.task('haml', function () {
   return gulp.src(config.inFiles.haml)
     .pipe(haml())
@@ -167,13 +167,14 @@ gulp.task('haml', function () {
 })
 
 // -------------------------------------------------------
-gulp.task('watch', ['symlink', 'js', 'sass', 'pug', 'html', 'server'], function () {
+gulp.task('watch', ['symlink', 'js', 'sass', 'pug', 'haml', 'html', 'server'], function () {
   // FIXME: initial development is done twice
-  getBundler().on('update', () => gulp.start('js'))
-  gulp.watch('**/*.pug', ['pug'])
+  getBundler().on('update', () => gulp.start('js', 'sass', 'pug', 'haml', 'html'))
+  gulp.watch(config.inFiles.pug, ['pug'])
+  gulp.watch(config.inFiles.haml, ['haml'])
+  gulp.watch(config.inFiles.html, ['html'])
   gulp.watch('**/*.coffee', ['js'])
   gulp.watch('**/*.{sass,scss,css}', ['sass'])
-  gulp.watch(config.inFiles.html, ['html'])
 })
 
 // -------------------------------------------------------
