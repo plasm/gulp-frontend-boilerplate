@@ -15,6 +15,7 @@ import notify from 'gulp-notify'
 import uglify from 'gulp-uglify'
 import minifyCss from 'gulp-minify-css'
 import pug from 'gulp-pug'
+import haml from 'gulp-haml'
 import rename from 'gulp-rename'
 import buffer from 'vinyl-buffer'
 
@@ -24,6 +25,7 @@ const config = {
   inFiles: {
     html: 'src/*.html',
     pug: 'src/*.pug',
+    haml: 'src/*.haml',
     js:   ['src/coffeescript/application.coffee'],
     css:  'src/sass/style.{sass,scss,css}'
   },
@@ -156,13 +158,23 @@ gulp.task('pug', function () {
 })
 
 // -------------------------------------------------------
-gulp.task('watch', ['symlink', 'js', 'sass', 'pug', 'html', 'server'], function () {
+// Development: Compile Haml files
+gulp.task('haml', function () {
+  return gulp.src(config.inFiles.haml)
+    .pipe(haml())
+    .pipe(gulp.dest(out_directory)) // Just copy.
+    .pipe(browserSync.stream())
+})
+
+// -------------------------------------------------------
+gulp.task('watch', ['symlink', 'js', 'sass', 'pug', 'haml', 'html', 'server'], function () {
   // FIXME: initial development is done twice
-  getBundler().on('update', () => gulp.start('js'))
-  gulp.watch('**/*.pug', ['pug'])
+  getBundler().on('update', () => gulp.start('js', 'sass', 'pug', 'haml', 'html'))
+  gulp.watch(config.inFiles.pug, ['pug'])
+  gulp.watch(config.inFiles.haml, ['haml'])
+  gulp.watch(config.inFiles.html, ['html'])
   gulp.watch('**/*.coffee', ['js'])
   gulp.watch('**/*.{sass,scss,css}', ['sass'])
-  gulp.watch(config.inFiles.html, ['html'])
 })
 
 // -------------------------------------------------------
@@ -227,7 +239,7 @@ gulp.task('minify-css', function() {
 
 // -------------------------------------------------------
 // Production: Copy HTML files
-gulp.task('copy:html', ['pug'], function () {
+gulp.task('copy:html', ['pug', 'haml'], function () {
   return gulp.src(['src/*.html'])
   .pipe(gulp.dest(out_directory))
   .pipe(notify({ message: 'Copy HTML task complete' }))
