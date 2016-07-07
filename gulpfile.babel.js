@@ -113,11 +113,7 @@ gulp.task('symlink', function () {
 // Development: Compile Js and stream to browser
 gulp.task('js', function () {
     return getBundler().bundle()
-    .pipe(plumber({errorHandler: (err) => {
-        notify.onError({ title: "Gulp", subtitle: "Failure!", message: "Error: <%= error.message %>", sound: "Beep" })(err)
-        this.emit("end")
-      }
-    }))
+    .on('error', notify.onError('<%= error.message %>'))
     .pipe(source(config.outFiles.js))
     .pipe(gulp.dest(out_directory))
     .pipe(notify({ message: 'Js compiled' }))
